@@ -1,0 +1,11 @@
+FROM frrouting/frr:v8.4.1
+
+COPY daemons.conf /etc/frr/daemons
+
+RUN chown frr:frr /etc/frr/daemons && \
+    chmod 640 /etc/frr/daemons && \
+    touch /etc/frr/vtysh.conf && \
+    chown frr:frr /etc/frr/vtysh.conf
+
+
+CMD ["/usr/lib/frr/docker-start"]

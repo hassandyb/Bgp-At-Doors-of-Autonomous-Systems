@@ -1,0 +1,12 @@
+FROM alpine:latest
+
+RUN apk upgrade && apk update && \
+    apk add --no-cache \
+    tcpdump \
+    vim \
+    iputils \
+    iproute2 \
+    busybox-extras
+
+
+CMD ["/bin/sh", "-c", "tail -f /dev/null"]

@@ -1,0 +1,24 @@
+# Assign IP address to the underlay interface (eth0)
+/sbin/ip addr add 10.1.1.2/24 dev eth0
+
+# Create VXLAN interface (unicast mode) - id: VXLAN Network Identifier (VNI) - dev: underlay interface - local: local VTEP IP - remote: remote VTEP IP - dstport: VXLAN UDP port
+/sbin/ip link add name vxlan10 type vxlan \
+    id 10 \
+    dev eth0 \
+    local 10.1.1.2 \
+    remote 10.1.1.1 \
+    dstport 4789
+# Bring up the VXLAN interface
+/sbin/ip link set dev vxlan10 up
+
+# Create a Linux bridge
+/sbin/ip link add br0 type bridge
+
+# Bring up the bridge
+/sbin/ip link set dev br0 up
+
+# Add physical interface to the bridge
+brctl addif br0 eth1
+
+# Add VXLAN interface to the bridge
+brctl addif br0 vxlan10

@@ -1,0 +1,51 @@
+# Loopback
+ip link set lo up
+ip addr add 1.1.1.2/32 dev lo
+
+# Underlay to RR
+ip addr add 10.1.1.2/30 dev eth0
+ip link set eth0 up
+
+# Host-facing interface
+ip link set eth1 up
+
+# VXLAN — nolearning because BGP EVPN handles MACs
+ip link add vxlan10 type vxlan id 10 \
+  local 1.1.1.2 \
+  dstport 4789 \
+  nolearning
+
+ip link set vxlan10 up
+
+# Bridge — connects host port + vxlan tunnel
+ip link add br0 type bridge
+ip link set br0 up
+ip link set eth1 master br0
+ip link set vxlan10 master br0
+```
+
+### FRR config (vtysh):
+```
+conf t
+
+router ospf
+ ospf router-id 1.1.1.2
+ network 1.1.1.2/32 area 0
+ network 10.1.1.0/30 area 0
+exit
+
+router bgp 1
+ bgp router-id 1.1.1.2
+ no bgp default ipv4-unicast
+
+ neighbor 1.1.1.1 remote-as 1
+ neighbor 1.1.1.1 update-source lo
+
+ address-family l2vpn evpn
+  neighbor 1.1.1.1 activate
+  advertise-all-vni
+ exit-address-family
+exit
+
+do write
+exit
